@@ -4,8 +4,6 @@
 
 -- STUFF YOU CAN CHANGE --
 
---path to FoxCamera, if installed, wherever its installed. Dont change if not installed
-local FOXCameraPath = "lib.FOXCamera"
 --group thats scaled
   local ScaledGroup = models.model.root
 --Scale down, when NBTScale on init is 1 (Only applies on init)
@@ -30,7 +28,7 @@ end
 if foxCameraInstalled == false and host:isHost() then
   printJson(toJson({ text = "Hey, this script doesn’t change the camera position — please use FoxCamera to move the camera if wanted.", color = "red" }))
 else
-  local FOXCamera = require(FOXCameraPath)
+  --local FOXCamera = require(FOXCameraPath)
   --FoxCamera's camera object
   local Camera = FOXCamera.getCamera()
 end
@@ -154,17 +152,19 @@ if host:isHost() and ActionWheelToggle then
   actionWheel:newAction()
     :title("Scale - " .. tostring(ScriptScale))
     :setItem("minecraft:piston")
-    :setOnLeftClick(function()
+    :setOnLeftClick(function(self)
       clickSound:setPitch(1):stop():play()
       ScriptScale = 1
       ScaledGroup:setScale(BaseScale)
       HostChangeScale()
+      self:title("Scale - " .. tostring(ScriptScale))
     end)
-    :setOnRightClick(function()
+    :setOnRightClick(function(self)
       clickSound:setPitch(1):stop():play()
       ScriptScale = 1
       ScaledGroup:setScale(BaseScale)
       HostChangeScale()
+      self:title("Scale - " .. tostring(ScriptScale))
     end)
     :onScroll(function(dir, self)
       clickSound:setPitch(1):stop():play()
@@ -190,6 +190,7 @@ local scaleCommand = commands
     end)
 
 end
+
 
 
 
