@@ -130,7 +130,7 @@ function events.tick()
     end
 
     renderer:setShadowRadius(TrueScale*0.5)
-    nameplate.ENTITY:setPivot(0, ((2 * TrueScale) + (TrueScale*0.3) + 0.15), 0)
+    nameplate.ENTITY:setPivot(0, (TrueScale * (2.6)), 0)
     nameplate.ENTITY:setScale(TrueScale)
 
 
@@ -190,4 +190,5 @@ local scaleCommand = commands
     end)
 
 end
+
 
