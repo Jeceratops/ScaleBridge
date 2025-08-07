@@ -1,5 +1,5 @@
 --Scalebridge!
---Version 0.11
+--Version 0.1
 --Credits- Jcera, Bitslyan
 
 -- STUFF YOU CAN CHANGE --
@@ -188,5 +188,6 @@ local scaleCommand = commands
       pings.ScriptScale(var, true)
       --print(ANumber)
     end)
+
 
 end
