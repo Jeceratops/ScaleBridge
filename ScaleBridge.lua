@@ -3,11 +3,11 @@
 --path to FoxCamera, if installed, wherever its installed. Dont change if not installed
 local FOXCameraPath = "lib.FOXCamera"
 --group thats scaled
-  local ScaledGroup = models.Moth.centerpoint
+  local ScaledGroup = models.model.root
 --Scale down, when NBTScale on init is 1 (Only applies on init)
-  local NoNBTScale = 0.8
+  local NoNBTScale = 1
 --Scale of the model, use for when you want to always scale down your model a certain amount
-  local BaseScale = 0.93
+  local BaseScale = 1
 --Do you want the action wheel?
   local ActionWheelToggle = true
 
@@ -184,4 +184,5 @@ local scaleCommand = commands
       pings.ScriptScale(var, true)
       --print(ANumber)
     end)
+
 end
