@@ -1,3 +1,7 @@
+--Scalebridge!
+--Version 0.1
+--Credits- Jcera, Bitslyan
+
 -- STUFF YOU CAN CHANGE --
 
 --path to FoxCamera, if installed, wherever its installed. Dont change if not installed
@@ -186,3 +190,4 @@ local scaleCommand = commands
     end)
 
 end
+
