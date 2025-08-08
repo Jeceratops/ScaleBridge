@@ -30,7 +30,7 @@ end
 if foxCameraInstalled == false and host:isHost() then
   printJson(toJson({ text = "Hey, this script doesn’t change the camera position — please use FoxCamera to move the camera if wanted.", color = "red" }))
 else
-  local FOXCamera = require(FOXCameraPath)
+  local FOXCamera = require(FoxCameraPath)
   --FoxCamera's camera object
   local Camera = FOXCamera.getCamera()
 end
