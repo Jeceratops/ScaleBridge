@@ -12,6 +12,8 @@
   local NoNBTScale = 1
 --Scale of the model, use for when you want to always scale down your model a certain amount
   local BaseScale = 1
+--Nameplate offset customization, its really a crapshoot to customize, so... if you dont like it, screw with the value!
+  local NameplateOffset = 1.5
 --Do you want the action wheel?
   local ActionWheelToggle = true
 
@@ -130,7 +132,7 @@ function events.tick()
     end
 
     renderer:setShadowRadius(TrueScale*0.5)
-    nameplate.ENTITY:setPivot(0, (TrueScale * (2.6)), 0)
+    nameplate.ENTITY:setPivot(0, (TrueScale + (TrueScale*NameplateOffset)), 0)
     nameplate.ENTITY:setScale(TrueScale)
 
 
