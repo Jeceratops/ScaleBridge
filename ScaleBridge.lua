@@ -1,12 +1,17 @@
 --Scalebridge!
---Version 0.1
---Credits- Jcera, Bitslyan
+--Version 0.2
+--[[
+        CREDITS
+        Jceratops (Jcera): ScaleBridge (This script!)
+        Bitslayn: Modular Action Wheel
+        Xander: Recursive Script Search
+]]--
 
 -- STUFF YOU CAN CHANGE --
 
 --Path to FoxCamera
-  local FoxCameraPath = "FOXCamera"
---group thats scaled
+  local FOXCamera
+--Model Group to Scale
   local ScaledGroup = models.model.root
 --Scale down, when NBTScale on init is 1 (Only applies on init)
   local NoNBTScale = 1
@@ -16,31 +21,34 @@
   local NameplateOffset = 1.5
 --Do you want the action wheel?
   local ActionWheelToggle = true
+--Show or Hide Warnings and/or Custom Errors
+  local debug = false
 
 -- DONT TOUCH BEYOND HERE --
 
 --Checks if FoxCamera is installed
 local foxCameraInstalled = false
 local commandLibInstalled = false
-if host:isHost() then
-  for _, v in ipairs(listFiles(nil, true)) do
-    if v:lower():find("foxcamera") then foxCameraInstalled = true end
-    if v:lower():find("commandlib") then commandLibInstalled = true end
+for _, key in ipairs(listFiles(nil, true)) do --Recursively find FOXCamera
+  local formatted = string.lower(key)
+  if formatted:find("foxcamera$") then --Un-comment FOXCamera if you actually need it in here. Otherwise, this is to check if FoxCamera Exists in the Avatar
+    FOXCamera = require(key) 
+    foxCameraInstalled = true
+  else --no FOXCamera?
+    if host:isHost() and debug then
+      printJson(toJson({ text = "Hey, this script doesn't change the camera position — please use FoxCamera to move the camera if wanted.", color = "red" }))
+    end
   end
-end
-
-if foxCameraInstalled == false and host:isHost() then
-  printJson(toJson({ text = "Hey, this script doesn’t change the camera position — please use FoxCamera to move the camera if wanted.", color = "red" }))
-else
-  local FOXCamera = require(FoxCameraPath)
-  --FoxCamera's camera object
-  local Camera = FOXCamera.getCamera()
+  if formatted:find("commandlib$") then
+    commandLibInstalled = true
+  end
 end
 
 local ScriptScale = 1
 local TrueScale = 1
 local NBTScale = 1           --Scale from NBT (1.20.5+)
 local ModelScale = 1 
+local MyCamera = FOXCamera.getCamera() --get current camera
 
 --on init
 ScaledGroup:setScale(BaseScale)
@@ -66,7 +74,6 @@ end
 function pings.ScriptScale(var, isHost)
   ScriptScale = var
   if isHost then
-    --tick_counter = 400       --force tick
     ScaledGroup:setScale(ScriptScale)
   end
 end
@@ -97,10 +104,9 @@ function events.tick()
   tick_counter = tick_counter + 1
   if tick_counter >= 200/5 then
     tick_counter = 0
-
+    
     --calculate NBTScale on host only, FoxCamera is active and in use, and only if the host is on 1.20.5 or beyond
     if host:isHost() and (client.compareVersions(client:getVersion(), '1.20.5') ~= -1) then
-      --print(fixFoxCamearScale(FOXCamera.attributes.scale))
       NBTScale = roundNBTScale(player:getBoundingBox().x / 0.6)
     end
 
@@ -121,6 +127,7 @@ function events.tick()
 
     --makes sure the camera works nicely, I hope
     if foxCameraInstalled and host:isHost() then
+
       MyCamera.scale = ModelScale
     end
 
@@ -131,12 +138,10 @@ function events.tick()
       ScaledGroup:setScale(TrueScale)
     end
 
-    renderer:setShadowRadius(TrueScale*0.5)
-    nameplate.ENTITY:setPivot(0, (TrueScale + (TrueScale*NameplateOffset)), 0)
-    nameplate.ENTITY:setScale(TrueScale)
-
-
-    avatar:store("patpat.boundingBox", (player:getBoundingBox() * NBTScale))
+    renderer:setShadowRadius(TrueScale*0.5) --Set Shadow Radius
+    nameplate.ENTITY:setPivot(0, (TrueScale + (TrueScale*NameplateOffset)), 0) --set Nameplate Pivot
+    nameplate.ENTITY:setScale(TrueScale) --set nameplate scale
+    avatar:store("patpat.boundingBox", (player:getBoundingBox() * NBTScale)) --store patpat AABB
 
   end
 end
@@ -190,10 +195,10 @@ local scaleCommand = commands
     :setFunction(function(var)
       ScriptScale = var
       pings.ScriptScale(var, true)
-      --print(ANumber)
     end)
 
 end
+
 
 
 
