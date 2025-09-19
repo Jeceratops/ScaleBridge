@@ -10,7 +10,7 @@
 -- STUFF YOU CAN CHANGE --
 
 --Path to FoxCamera
-  local FOXCamera --keeping this here incase you need it in the future -Xander
+  local FOXCamera
 --Model Group to Scale
   local ScaledGroup = models.model.root
 --Scale down, when NBTScale on init is 1 (Only applies on init)
@@ -32,7 +32,7 @@ local commandLibInstalled = false
 for _, key in ipairs(listFiles(nil, true)) do --Recursively find FOXCamera
   local formatted = string.lower(key)
   if formatted:find("foxcamera$") then --Un-comment FOXCamera if you actually need it in here. Otherwise, this is to check if FoxCamera Exists in the Avatar
-    --FOXCamera = require(key) 
+    FOXCamera = require(key) 
     foxCameraInstalled = true
   else --no FOXCamera?
     if host:isHost() and debug then
@@ -48,6 +48,7 @@ local ScriptScale = 1
 local TrueScale = 1
 local NBTScale = 1           --Scale from NBT (1.20.5+)
 local ModelScale = 1 
+local MyCamera = FOXCamera.getCamera() --get current camera
 
 --on init
 ScaledGroup:setScale(BaseScale)
@@ -197,6 +198,7 @@ local scaleCommand = commands
     end)
 
 end
+
 
 
 
