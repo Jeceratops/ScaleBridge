@@ -1,5 +1,5 @@
 --Scalebridge!
---Version 0.2_1
+--Version 0.2.6
 --[[
         CREDITS
         Jceratops (Jcera): ScaleBridge (This script!)
@@ -7,7 +7,8 @@
         Xander: Recursive Script Search, Redundant Code Removal, Interpolation
 ]]--
 
--- STUFF YOU CAN CHANGE --
+
+--#region 'Configure'
 
 --Path to FoxCamera
   local FOXCamera
@@ -26,11 +27,19 @@
 --Set Interpolation Speed
   local lerpSpeed = 0.5 --change as desired
 
--- [[DONT TOUCH BEYOND HERE]] --
+--Advanced
+  local commandLibOverride = true
 
---Checks if FoxCamera is installed
+--#endregion
+
+
+--#region 'Don't Touch (Unless you're 5Head)'
+
+--#region 'Dependencies'
 local foxCameraInstalled = false
 local commandLibInstalled = false
+local isclib_local = false
+local sendWarnOnce = false
 for _, key in ipairs(listFiles(nil, true)) do --Recursively find FOXCamera
   local formatted = string.lower(key)
   if formatted:find("foxcamera$") then
@@ -38,53 +47,54 @@ for _, key in ipairs(listFiles(nil, true)) do --Recursively find FOXCamera
     foxCameraInstalled = true
   else --no FOXCamera?
     if host:isHost() and debug then
-      printJson(toJson({ text = "Hey, this script doesn't change the camera position — please use FoxCamera to move the camera if desired.", color = "red" }))
+      if not sendWarnOnce then
+        sendWarnOnce = true
+        printJson(toJson({ text = "Hey, this script doesn't change the camera position — please use FoxCamera to move the camera if desired.", color = "red" }))
+      end
     end
   end
-  if formatted:find("commandlib$") then
-    commandLibInstalled = true
-  end
+    isclib_local = ((not formatted:find("commandlib$")) and commands)
+    commandLibInstalled = (not commandLibOverride) and (isclib_local or formatted:find("commandlib$"))
+    --log(commandLibInstalled)
 end
+--#endregion
+
+--#region 'Setup'
 local lerp = math.lerp
+local MyCamera
+local clickSound = host:isHost() and sounds["minecraft:ui.button.click"]:setVolume(0.2) or nil
 local ScriptScale = 1
 local TrueScale = 1
 local NBTScale = 1           --Scale from NBT (1.20.5+)
 local ModelScale = 1
-local _FinalScale, FinalScale = 1, 1
 local selScale = ModelScale
-local MyCamera = FOXCamera.getCamera() --get current camera
---on init
-ScaledGroup:setScale(BaseScale)
-
-local delayedInitToggle = true
-local delayedInit = 0
-local onInit = true
+local _FinalScale, FinalScale = 1, 1
+local renderScale = 1
 local tick_counter = 200
+local ScaleHelperInstalled = false
 
+function events.entity_init() --because it needs to be delayed
+  MyCamera = FOXCamera.getCamera()
+  --if NBTScale cannot be changed, or isnt changed, set ScriptScale to NoNBTScale on init
+  if NBTScale == 1 and host:isHost() then
+    ScriptScale = NoNBTScale
+  end
+  ScaledGroup:setScale(BaseScale)
+  host:sendChatCommand("/sh")
+  events.CHAT_RECEIVE_MESSAGE:register(function(msg) 
+      if msg == "ScaleHelper exists :3" then 
+        ScaleHelperInstalled = true 
+      end
+    end, 
+  "ae")
+  events.CHAT_RECEIVE_MESSAGE:remove("ae")
+end
+--#endregion
+
+--#region 'Local Functions'
 --does what it says on the tin (rounds to nearest ten thousandth)
 local function roundNBTScale(var)
   return math.floor(var * 10000 + 0.5) / 10000
-end
-
--- Pings and useful returns --
-
-function pings.NBTScale(var)
-  NBTScale = var
-end
-
-function pings.TrueScale(var)
-  TrueScale = var
-end
-
-function pings.ScriptScale(var, isHost)
-  ScriptScale = var
-  if isHost then
-    ScaledGroup:setScale(ScriptScale)
-  end
-end
-
-function pings.syncLerpSpeed(x)
-  lerpSpeed = x
 end
 
 local function HostChangeScale()
@@ -94,44 +104,89 @@ local function HostChangeScale()
   end
 end
 
+
+local function PekhuiScale(scale)
+  if client.isModLoaded("pehkui") then
+      host:sendChatCommand("/scale set pehkui:hitbox_width " .. scale)
+      host:sendChatCommand("/scale set pehkui:hitbox_height " .. scale)
+      host:sendChatCommand("/scale set pehkui:eye_height " .. scale)
+      host:sendChatCommand("/scale set pehkui:view_bobbing " .. scale)  
+  end
+end
+--#endregion
+
+
+--#region 'Pings and Return Functions'
+---@param var integer|number
+function pings.NBTScale(var)
+  NBTScale = var
+end
+
+---@param var integer|number
+function pings.TrueScale(var)
+  TrueScale = var
+end
+
+---@param var integer|number
+---@param isHost boolean
+function pings.ScriptScale(var, isHost)
+  ScriptScale = var
+  if isHost then
+    ScaledGroup:setScale(ScriptScale)
+  end
+end
+
+---@param x integer|number
+function pings.syncLerpSpeed(x)
+  lerpSpeed = x
+end
+
+---@return integer|number
 function GetNBTScale()
   return NBTScale
 end
 
+---@return integer|number
 function GetTrueScale()
   return TrueScale
 end
 
+---@return integer|number
 function GetModelScale()
   return ModelScale
 end
 
+---@param x integer|number
 function SetLerpSpeed(x)
   lerpSpeed = x
   pings.syncLerpSpeed(x)
 end
 
---custom initDelay, I dont know why it exists anymore, but it breaks otherwise...
+---@param scale integer|number
+function _PekhuiScale(scale)
+  PekhuiScale(scale)
+end
+--#endregion
 
 function events.tick()
   _FinalScale = FinalScale
   tick_counter = tick_counter + 1
   if tick_counter >= 200/5 then
     tick_counter = 0
-    --pings the NBTScale
+    --Execute Pings
     pings.NBTScale(NBTScale)
     pings.ScriptScale(ScriptScale, false)
     pings.syncLerpSpeed(lerpSpeed)
+    if client.isModLoaded("pehkui") and ScaleHelperInstalled then 
+      host:sendChatCommand("/sh hitboxscale " .. FinalScale)
+    elseif client.isModLoaded("pehkui") and not ScaleHelperInstalled then 
+        PekhuiScale(renderScale) 
+    end
+
   end
     --calculate NBTScale on host only, FoxCamera is active and in use, and only if the host is on 1.20.5 or beyond
   if host:isHost() and (client.compareVersions(client:getVersion(), '1.20.5') ~= -1) then
     NBTScale = roundNBTScale(player:getBoundingBox().x / 0.6)
-  end
-
-  --if NBTScale cannot be changed, or isnt changed, set ScriptScale to NoNBTScale on init
-  if onInit and NBTScale == 1 and host:isHost() then
-    ScriptScale = NoNBTScale
-    onInit = false
   end
 
     --TrueScale is the total of NBTScale and ModelScale
@@ -141,40 +196,33 @@ function events.tick()
 
   --makes sure the camera works nicely, I hope
   if foxCameraInstalled and host:isHost() then
-    MyCamera.scale = ModelScale
+      MyCamera.scale = ModelScale
   end
-
-  renderer:setShadowRadius(TrueScale*0.5) --Set Shadow Radius
-  nameplate.ENTITY:setPivot(0, (TrueScale + (TrueScale*NameplateOffset)), 0) --set Nameplate Pivot
-  nameplate.ENTITY:setScale(TrueScale) --set nameplate scale
   avatar:store("patpat.boundingBox", (player:getBoundingBox() * NBTScale)) --store patpat AABB
 
   --ScaleBridge
-  if (client.compareVersions(client:getVersion(), '1.20.5') ~= -1) then
-      selScale = ModelScale
-  else
-      selScale = TrueScale
-  end
-    FinalScale = lerp(FinalScale, selScale, lerpSpeed)
+  selScale = (client.compareVersions(client:getVersion(), '1.20.5') ~= -1) and ModelScale or TrueScale
+  FinalScale = lerp(FinalScale, selScale, lerpSpeed)
 end
 
-local renderScale = 1
+
 function events.render(delta)
   renderScale = lerp(_FinalScale, FinalScale, delta)
   ScaledGroup:setScale(renderScale)
+
+  renderer:setShadowRadius(renderScale*0.5) --Set Shadow Radius
+  nameplate.ENTITY:setPivot(0, (renderScale + (renderScale*NameplateOffset)), 0) --set Nameplate Pivot
+  nameplate.ENTITY:setScale(renderScale) --set nameplate scale
 end
 
---Action Wheel
+--#region 'Action Wheel'
 if host:isHost() and ActionWheelToggle then
   function events.entity_init()
-  
   --borrowed from Fox, with her permission
   local actionWheel = action_wheel:getCurrentPage() or action_wheel:newPage("mainPage")
   if not action_wheel:getCurrentPage() then
     action_wheel:setPage("mainPage")
   end
-
-  local clickSound = sounds["minecraft:ui.button.click"]:setVolume(0.2)
 
   actionWheel:newAction()
     :title("Scale - " .. tostring(ScriptScale))
@@ -212,13 +260,7 @@ local scaleCommand = commands
       ScriptScale = var
       pings.ScriptScale(var, true)
     end)
-
 end
+--#endregion
 
-
-
-
-
-
-
-
+--#endregion
