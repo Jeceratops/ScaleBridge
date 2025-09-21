@@ -1,5 +1,5 @@
 --Scalebridge!
---Version 0.2.6
+--Version 0.2.7
 --[[
         CREDITS
         Jceratops (Jcera): ScaleBridge (This script!)
@@ -75,19 +75,17 @@ local ScaleHelperInstalled = false
 
 function events.entity_init() --because it needs to be delayed
   MyCamera = FOXCamera.getCamera()
-  --if NBTScale cannot be changed, or isnt changed, set ScriptScale to NoNBTScale on init
-  if NBTScale == 1 and host:isHost() then
-    ScriptScale = NoNBTScale
-  end
   ScaledGroup:setScale(BaseScale)
-  host:sendChatCommand("/sh")
-  events.CHAT_RECEIVE_MESSAGE:register(function(msg) 
-      if msg == "ScaleHelper exists :3" then 
-        ScaleHelperInstalled = true 
-      end
-    end, 
-  "ae")
-  events.CHAT_RECEIVE_MESSAGE:remove("ae")
+    if client.isModLoaded("pehkui") then 
+      host:sendChatCommand("/sh")
+      events.CHAT_RECEIVE_MESSAGE:register(function(msg) 
+          if msg == "ScaleHelper exists :3" then 
+            ScaleHelperInstalled = true 
+          end
+        end, 
+      "ae")
+      events.CHAT_RECEIVE_MESSAGE:remove("ae")
+    end
 end
 --#endregion
 
@@ -168,6 +166,7 @@ function _PekhuiScale(scale)
 end
 --#endregion
 
+local triggeredOnce = false
 function events.tick()
   _FinalScale = FinalScale
   tick_counter = tick_counter + 1
@@ -187,6 +186,12 @@ function events.tick()
     --calculate NBTScale on host only, FoxCamera is active and in use, and only if the host is on 1.20.5 or beyond
   if host:isHost() and (client.compareVersions(client:getVersion(), '1.20.5') ~= -1) then
     NBTScale = roundNBTScale(player:getBoundingBox().x / 0.6)
+  end
+
+  --if NBTScale cannot be changed, or isnt changed, set ScriptScale to NoNBTScale on init
+  if NBTScale == 1 and host:isHost() and tick_counter == 39 and (not triggeredOnce) then
+    ScriptScale = NoNBTScale
+    triggeredOnce = true
   end
 
     --TrueScale is the total of NBTScale and ModelScale
@@ -209,6 +214,9 @@ end
 function events.render(delta)
   renderScale = lerp(_FinalScale, FinalScale, delta)
   ScaledGroup:setScale(renderScale)
+
+  --crouch fix?
+  if player:isCrouching() then ScaledGroup:setPos(0,-2.3 * 0.075+ 2.3,0) else ScaledGroup:setPos(0,0,0) end
 
   renderer:setShadowRadius(renderScale*0.5) --Set Shadow Radius
   nameplate.ENTITY:setPivot(0, (renderScale + (renderScale*NameplateOffset)), 0) --set Nameplate Pivot
